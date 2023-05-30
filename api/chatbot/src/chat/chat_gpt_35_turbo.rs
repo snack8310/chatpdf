@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use Debug;
 
 use async_trait::async_trait;
-use log::debug;
+use log::{debug, info};
 use reqwest::Client;
 
 use crate::error::Result;
@@ -113,7 +113,19 @@ pub struct ChatGpt35Turbo;
 
 #[async_trait]
 impl ChatApi for ChatGpt35Turbo {
-    async fn send_message(
+    // async fn get_answer(&self) -> Result<String>{
+    //     //  STEP 1: Generate an optimized keyword search query based on the chat history and the last question
+    //     info!("Execute step 1");
+    //     let optimized_prompt = "";
+    //     &self.send_message(token, optimized_prompt.to_owned(), context, message_from_user);
+    //     //  STEP 2: Retrieve relevant documents from the search index with the GPT optimized query    
+    //     info!("Execute step 2");
+    //     let top_k = 5;
+    //     info!("Search for Top {}", top_k);
+    //     Ok("ok".to_owned())
+    // }
+    
+    async fn get_answer(
         &self,
         // client: &Client,
         // config: &ChatGptConfig,
