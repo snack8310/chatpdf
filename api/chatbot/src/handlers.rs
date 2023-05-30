@@ -1,17 +1,63 @@
 use actix_web::{web, HttpResponse};
+use qdrant_client::prelude::*;
+use qdrant_client::qdrant::vectors_config::Config;
+use qdrant_client::qdrant::{CreateCollection, SearchPoints, VectorParams, VectorsConfig};
 
-use crate::models::{UploadRequest, QueryRequest};
-use crate::utils::extract_text_from_pdf;
 use crate::api_client::OpenAiClient;
-use crate::error::Result;
+use crate::error::{Error, Result};
+use crate::models::{QueryRequest, UploadRequest};
+use crate::text_splitter::RecursiveCharacterTextSplitter;
+use crate::utils::extract_text_from_pdf;
 
 pub async fn upload_handler(request: web::Json<UploadRequest>) -> HttpResponse {
-    // 处理上传请求，切片文件，向量化，上传到向量库
-    // 返回成功响应或错误响应
-    match upload_file(&request.0.file) {
+    // 读取文件流
+    let file_path = &request.file;
+
+    // 切片文件内容。使用TextSplitter里面的方法，每1500字符切片。返回docs的列表
+    let docs = match split_file_content(file_path) {
+        Ok(docs) => docs,
+        Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+    };
+
+    // 拿docs列表，访问OpenAI的embedding，生成向量和索引，插入向量库（qdrant）
+    match insert_vectors_into_qdrant(docs).await {
         Ok(_) => HttpResponse::Ok().body("File uploaded successfully"),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
+}
+
+fn split_file_content(file_path: &str) -> Result<Vec<String>> {
+    // 从文件中提取文本内容
+    let text = extract_text_from_pdf(file_path)?;
+
+    // 使用TextSplitter切片文本内容，每1500字符切片
+    let splitter = RecursiveCharacterTextSplitter::new(None, true, 1500);
+    let docs = splitter.split_text(&text);
+
+    Ok(docs)
+}
+
+async fn insert_vectors_into_qdrant(docs: Vec<String>) -> Result<()> {
+    // 使用OpenAI API进行向量生成和向量库插入操作
+    let openai_client = OpenAiClient::new("YOUR_API_KEY".to_string());
+
+    let config: QdrantClientConfig = QdrantClientConfig::from_url("http://localhost:6334");
+    let qdrant_client = match QdrantClient::new(Some(config)).await {
+        Ok(c) => c,
+        Err(err) => return Err(Error::QdrantError(err.to_string())),
+    };
+
+    for doc in docs {
+        // 生成向量并插入向量库
+        let vector = openai_client.get_embeddings(&doc).await?;
+
+        // 将向量插入qdrant向量库
+        // qdrant_client
+        //     .upsert_points_blocking("collection_name", vector, None)
+        //     .await?;
+    }
+
+    Ok(())
 }
 
 pub async fn query_handler(request: web::Query<QueryRequest>) -> HttpResponse {
