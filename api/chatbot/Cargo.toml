@@ -6,10 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-rt = "2.8.0"
 actix-web = "4.3.1"
 anyhow = "1.0.71"
 async-trait = "0.1.68"
 dotenv = "0.15.0"
+encoding = "0.2.33"
+encoding_rs = "0.8.32"
 log = "0.4.17"
 qdrant-client = "1.1.2"
 reqwest = { version = "0.11", features = ["json"] }
@@ -17,3 +20,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.96"
 simple_logger = "4.1.0"
 thiserror = "1.0.40"
+tokio = { version = "1.28.2", features = ["rt-multi-thread"] }
+tonic = "0.9.2"

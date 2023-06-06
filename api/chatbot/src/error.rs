@@ -1,4 +1,4 @@
-use qdrant_client::qdrant;
+use actix_web::{ResponseError, HttpResponse};
 use thiserror::Error;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -13,4 +13,17 @@ pub enum Error {
     JsonError(#[from] serde_json::Error),
     #[error("Qdrant error: {0}")]
     QdrantError(String),
+}
+
+
+impl ResponseError for Error {
+    fn error_response(&self) -> HttpResponse {
+        match self {
+            Error::HttpError(_) => todo!(),
+            Error::IoError(_) => todo!(),
+            Error::JsonError(_) => todo!(),
+            Error::QdrantError(_) => todo!(),
+        }
+    }
+
 }

@@ -1,6 +1,6 @@
-use serde::{Deserialize};
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct UploadRequest {
     pub file: String, // 根据你的需求，这里可以是文件路径、文件名或其他文件标识符
 }
